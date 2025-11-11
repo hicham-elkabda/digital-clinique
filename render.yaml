@@ -1,0 +1,68 @@
+services:
+  - type: web
+    name: laravel-app
+    env: docker
+    plan: free
+    branch: main
+    buildCommand: ""
+    startCommand: apache2-foreground
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_KEY
+        value: base64:0goi0jlf5WCwbC9wSieIzYaSngwsrjN5AvlpjRHN9Mg=
+      - key: APP_DEBUG
+        value: false
+      - key: APP_URL
+        value: https://laravel-app.onrender.com
+
+      # ==========================
+      # DATABASE (MySQL Render)
+      # ==========================
+      - key: DB_CONNECTION
+        value: mysql
+      - key: DB_HOST
+        fromDatabase:
+          name: laravel-mysql
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: laravel-mysql
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: laravel-mysql
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: laravel-mysql
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: laravel-mysql
+          property: password
+
+      # ==========================
+      # MAIL
+      # ==========================
+      - key: MAIL_MAILER
+        value: smtp
+      - key: MAIL_HOST
+        value: smtp.gmail.com
+      - key: MAIL_PORT
+        value: 587
+      - key: MAIL_USERNAME
+        value: hichamelkabda4@gmail.com
+      - key: MAIL_PASSWORD
+        value: czfvxpykntyrcdnr
+      - key: MAIL_ENCRYPTION
+        value: tls
+      - key: MAIL_FROM_ADDRESS
+        value: hichamelkabda4@gmail.com
+      - key: MAIL_FROM_NAME
+        value: "Cabinet Majda Bouzalmad"
+
+databases:
+  - name: laravel-mysql
+    plan: free
+    databaseName: db_laravel
