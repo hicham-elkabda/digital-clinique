@@ -1,31 +1,38 @@
-# Utiliser une image PHP avec Apache
+# ----------- Base image PHP + Apache ------------
 FROM php:8.2-apache
 
-# Installer les extensions nécessaires à Laravel + MySQL
+# ----------- Installer dépendances nécessaires ------------
 RUN apt-get update && apt-get install -y \
-    git unzip libzip-dev libpng-dev libonig-dev libxml2-dev zip \
+    git \
+    unzip \
+    libzip-dev \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    curl \
     && docker-php-ext-install pdo pdo_mysql zip
 
-# Activer le module rewrite d'Apache
+# ----------- Activer rewrite pour Laravel ------------
 RUN a2enmod rewrite
 
-# Copier le projet Laravel
+# ----------- Copier le code Laravel dans le container ------------
 COPY . /var/www/html
-
-# Définir le dossier de travail
 WORKDIR /var/www/html
 
-# Installer Composer
+# ----------- Installer Composer ------------
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
-# Installer les dépendances Laravel
 RUN composer install --no-dev --optimize-autoloader
 
-# Donner les permissions nécessaires
+# ----------- Permissions ------------
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Exposer le port 80
+# ----------- Configurer Apache pour Koyeb ---------
+# Apache par défaut écoute sur le port 80, on change vers 8000
+RUN sed -i 's/80/8000/' /etc/apache2/ports.conf /etc/apache2/sites-available/000-default.conf
+
+# ----------- Exposer le port utilisé par Koyeb ------------
 EXPOSE 8000
 
-# Démarrer Apache
+# ----------- Commande de démarrage ------------
 CMD ["apache2-foreground"]
