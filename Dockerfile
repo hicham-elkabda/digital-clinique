@@ -1,38 +1,38 @@
-# ----------- Base image PHP + Apache ------------
-FROM php:8.2-apache
+# Étape 1 : build de l'application
+FROM php:8.2-fpm
 
-# ----------- Installer dépendances nécessaires ------------
+# Installer les extensions PHP nécessaires
 RUN apt-get update && apt-get install -y \
     git \
+    curl \
+    zip \
     unzip \
-    libzip-dev \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
-    zip \
-    curl \
-    && docker-php-ext-install pdo pdo_mysql zip
+    libzip-dev \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
-# ----------- Activer rewrite pour Laravel ------------
-RUN a2enmod rewrite
+# Installer Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# ----------- Copier le code Laravel dans le container ------------
-COPY . /var/www/html
+# Définir le dossier de travail
 WORKDIR /var/www/html
 
-# ----------- Installer Composer ------------
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+# Copier les fichiers du projet
+COPY . .
+
+# Installer les dépendances PHP
 RUN composer install --no-dev --optimize-autoloader
 
-# ----------- Permissions ------------
+# Générer la clé Laravel
+RUN php artisan key:generate
+
+# Donner les permissions correctes
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# ----------- Configurer Apache pour Koyeb ---------
-# Apache par défaut écoute sur le port 80, on change vers 8000
-RUN sed -i 's/80/8000/' /etc/apache2/ports.conf /etc/apache2/sites-available/000-default.conf
-
-# ----------- Exposer le port utilisé par Koyeb ------------
+# Exposer le port 8000
 EXPOSE 8000
 
-# ----------- Commande de démarrage ------------
-CMD ["apache2-foreground"]
+# Lancer le serveur Laravel
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
